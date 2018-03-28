@@ -1,0 +1,119 @@
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Description</key>
+	<string>This is adapted from com.github.andrewvalentine.munki.TurningPoint recipes for the non cloud version of TurningPoint
+	Downloads and imports the current version of TurningPoint into Munki. Note the following:
+
+- A preinstall script is provided that removes the old TurningPointCloud.app.
+- A postinstall script is provided that automates the setup of integration with Microsoft Powerpoint.
+- An uninstall script is provided that removes the .app and the CFMSupport directory.
+
+If you do not wish to use these scripts, you should address this in your recipe override.
+ Make sure you are licensed for this product before using this.</string>
+	<key>Identifier</key>
+	<string>com.github.samtarr.munki.TurningPointCloud</string>
+	<key>Input</key>
+	<dict>
+		<key>NAME</key>
+		<string>TurningPointCloud</string>
+		<key>MUNKI_REPO_SUBDIR</key>
+		<string>apps/TurningPoint</string>
+		<key>pkginfo</key>
+		<dict>
+			<key>catalogs</key>
+			<array>
+				<string>testing</string>
+			</array>
+			<key>category</key>
+			<string>Productivity</string>
+			<key>description</key>
+			<string>A cross platform polling and data collection solution. Incorporates management of polling, content, participants, sessions and reports.</string>
+			<key>developer</key>
+			<string>Turning Technologies</string>
+			<key>display_name</key>
+			<string>Turning Point Cloud</string>
+			<key>name</key>
+			<string>%NAME%</string>
+			<key>unattended_install</key>
+			<false/>
+		</dict>
+	</dict>
+	<key>MinimumVersion</key>
+	<string>0.6.0</string>
+	<key>ParentRecipe</key>
+	<string>com.github.samtarr.download.TurningPointCloud</string>
+	<key>Process</key>
+	<array>
+		<dict>
+			<key>Processor</key>
+			<string>MunkiPkginfoMerger</string>
+			<key>Arguments</key>
+			<dict>
+				<key>additional_pkginfo</key>
+				<dict>
+					<key>postinstall_script</key>
+					<string>#!/bin/bash
+
+# Declare variables
+
+LIB_DIR="$3/Library/CFMSupport"
+
+# Check for CFMSupport directory
+
+if [ ! -d $LIB_DIR ]; then
+    echo "CFMSupport directory does not exist...creating..."
+    /bin/mkdir $LIB_DIR
+else
+    echo "CFMSupport directory exists...proceeding..."
+fi
+
+# Copy files
+
+/bin/cp "/Applications/TurningPoint Cloud.app/Contents/Frameworks/TTSharedLib.1.0.0.dylib" $LIB_DIR
+/bin/cp "/Applications/TurningPoint Cloud.app/Contents/MacOS/powerpoint-message-handler.1.0.0" $LIB_DIR
+/bin/chmod -R 777 "/Applications/TurningPoint Cloud.app/"
+
+exit 0</string>
+					<key>preinstall_script</key>
+					<string>#!/bin/bash
+
+    echo "Checking for deprecated TurningPoint installation..."
+    
+    if [ -d "/Applications/TurningPoint .app" ]; then
+    echo "Deprecated TurningPoint.app found...removing..."
+    /bin/rm -rf "/Applications/TurningPoint.app"
+else
+    echo "No deprecated install found...proceeding with new install..."
+fi
+    
+    exit 0</string>
+					<key>uninstall_method</key>
+					<string>uninstall_script</string>
+					<key>uninstall_script</key>
+					<string>#!/bin/bash
+
+/bin/rm -rf "/Applications/TurningPoint Cloud.app"
+
+/bin/rm -rf "/Library/CFMSupport"
+
+exit 0</string>
+				</dict>
+			</dict>
+		</dict>
+		<dict>
+			<key>Processor</key>
+			<string>MunkiImporter</string>
+			<key>Arguments</key>
+			<dict>
+				<key>pkg_path</key>
+				<string>%pathname%</string>
+				<key>repo_subdirectory</key>
+				<string>%MUNKI_REPO_SUBDIR%</string>
+				<key>version_comparison_key</key>
+				<string>CFBundleVersion</string>
+			</dict>
+		</dict>
+	</array>
+</dict>
+</plist>
